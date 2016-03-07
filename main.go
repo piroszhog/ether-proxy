@@ -32,7 +32,8 @@ func startProxy() {
 
 	go startFrontend(&cfg, s)
 
-	r.Handle("/{diff:.+}/{id:.+}", s)
+	// r.Handle("/{id:.+}/{diff:.+}", s)
+	r.Handle("/{id:.+}", s)
 	err := http.ListenAndServe(cfg.Proxy.Listen, r)
 	if err != nil {
 		log.Fatal(err)
