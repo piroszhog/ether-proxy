@@ -62,12 +62,7 @@ func (r *RPCClient) GetWork() ([]string, error) {
 	if rpcResp.Error != nil {
 		return reply, errors.New(rpcResp.Error["message"].(string))
 	}
-
 	err = json.Unmarshal(*rpcResp.Result, &reply)
-	// Handle empty result, daemon is catching up (geth bug!!!)
-	if len(reply) != 3 || len(reply[0]) == 0 {
-		return reply, errors.New("Daemon is not ready")
-	}
 	return reply, err
 }
 
@@ -121,7 +116,11 @@ func (r *RPCClient) SubmitHashrate(params interface{}) (bool, error) {
 func (r *RPCClient) doPost(url, method string, params interface{}) (JSONRpcResp, error) {
 	jsonReq := map[string]interface{}{"jsonrpc": "2.0", "id": 0, "method": method, "params": params}
 	data, _ := json.Marshal(jsonReq)
-	resp, err := http.Post(url, "application/json", bytes.NewBuffer(data))
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(data))
+	req.Header.Set("Content-Length", (string)(len(data)))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+	resp, err := r.client.Do(req)
 	var rpcResp JSONRpcResp
 
 	if err != nil {
